@@ -1,0 +1,31 @@
+﻿services:
+  airflow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ecommerce_airflow
+    command: standalone
+    restart: unless-stopped
+    init: true
+    ports:
+      - "8080:8080"
+    env_file:
+      - ../.env
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/state/airflow.db
+      DB_HOST: postgres
+      DB_PORT: "5432"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./state:/opt/airflow/state
+      - ../src:/opt/ecommerce/src:ro
+      - ../logs:/opt/ecommerce/logs
+      - ../.env:/opt/ecommerce/.env:ro
+    networks:
+      - ecommerce-data-platform_default
+
+networks:
+  ecommerce-data-platform_default:
+    external: true

@@ -1,0 +1,14 @@
+customer_id,first_name,last_name,email,city,country,created_at
+1,Meryeme,Illa,meryeme@example.com,Fes,Morocco,2026-01-10
+2,Ahmed,Amrani,ahmed@example.com,Casablanca,Morocco,2026-01-12
+3,Sara,Alaoui,sara@example.com,Rabat,Morocco,2026-01-15
+4,Youssef,Bennani,youssef@example.com,Marrakech,Morocco,2026-01-18
+5,Nadia,Idrissi,nadia@example.com,Tanger,Morocco,2026-01-20
+6,Omar,Karim,omar@example.com,Agadir,Morocco,2026-01-21
+7,Imane,Fassi,imane@example.com,Fes,Morocco,2026-01-22
+8,Salma,Zerouali,salma@example.com,Rabat,Morocco,2026-01-25
+9,Karim,Naji,karim@example.com,Casablanca,Morocco,2026-01-27
+10,Lina,Saidi,lina@example.com,Meknes,Morocco,2026-01-30
+11,Amine,Test,amine@example.com,Fes,Morocco,invalid-date
+12,Sara,Test,,Rabat,Morocco,2026-02-01
+12,Sara,Test,sara@example.com,Rabat,Morocco,2026-02-01

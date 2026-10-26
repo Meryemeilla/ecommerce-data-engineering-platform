@@ -1,0 +1,16 @@
+product_id,product_name,category,price,stock_quantity,created_at
+1,Laptop Dell,Electronics,8500,12,2026-01-10
+2,Wireless Mouse,Electronics,250,45,2026-01-12
+3,Mechanical Keyboard,Electronics,750,20,2026-01-15
+4,Office Chair,Furniture,1800,8,2026-01-18
+5,Desk Lamp,Home,350,30,2026-01-20
+6,USB-C Cable,Electronics,120,100,2026-01-22
+7,Notebook,Stationery,35,200,2026-01-25
+8,Backpack,Fashion,450,25,2026-01-28
+9,Monitor 24 inch,Electronics,2200,15,2026-02-01
+10,Water Bottle,Home,90,50,2026-02-03
+11,Gaming Headset,Electronics,-500,10,2026-02-05
+12,,Electronics,300,20,2026-02-07
+13,Smartphone,Electronics,6500,-5,2026-02-10
+14,Tablet,Electronics,3200,15,invalid-date
+14,Tablet Pro,Electronics,4500,10,2026-02-12

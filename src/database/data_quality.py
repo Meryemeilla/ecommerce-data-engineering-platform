@@ -88,11 +88,14 @@ CHECKS = {
 
 
 
+
 def main():
-    connection = get_connection()
     total_anomalies = 0
+    connection = None
 
     try:
+        connection = get_connection()
+
         with connection.cursor() as cursor:
             print("\n===== RAPPORT DE QUALITÉ DES DONNÉES =====\n")
 
@@ -116,10 +119,13 @@ def main():
 
             print("SUCCÈS : toutes les règles de qualité sont respectées.")
 
+    except psycopg2.Error as error:
+        print(f"ERREUR BASE DE DONNÉES : {error}", file=sys.stderr)
+        sys.exit(1)
+
     finally:
-        connection.close()
-
-
+        if connection is not None:
+            connection.close()
 
 
 if __name__ == "__main__":

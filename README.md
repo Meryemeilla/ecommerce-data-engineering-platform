@@ -1,149 +1,283 @@
 # E-commerce Data Engineering Platform
 
-An end-to-end data engineering project built with Python, PostgreSQL, Docker, and Apache Airflow. The project demonstrates how to ingest e-commerce CSV data, validate and transform records, and produce analytics-ready datasets through an orchestrated ETL pipeline.
+An end-to-end data engineering project that ingests e-commerce CSV data, validates and transforms records with Python and SQL, and builds analytics-ready datasets in PostgreSQL. Apache Airflow orchestrates the ETL workflow, while Docker provides the local development environment.
 
 ## Project Overview
 
-This project simulates a small e-commerce data platform designed to transform raw operational data into reliable datasets for business reporting.
+This project simulates an e-commerce data platform that transforms operational data into structured, reliable datasets for business analysis.
 
-The pipeline processes customers, products, orders, and order items through three data layers: `raw`, `staging`, and `analytics`.
+The pipeline handles four entities:
+
+- Customers
+- Products
+- Orders
+- Order items
+
+It organizes data into three PostgreSQL schemas: `raw`, `staging`, and `analytics`.
 
 ## Architecture
 
 ```text
-CSV Files
-   |
-   v
-Python Ingestion
-   |
-   v
-PostgreSQL - raw
-   |
-   v
-Staging Transformations
-   |
-   v
-PostgreSQL - staging
-   |
-   v
-Analytics Tables
-   |
-   v
-Data Quality Checks
+                  E-commerce CSV Files
+                           |
+                           v
+                  Python Ingestion
+                  Validation & DQ
+                           |
+                           v
+                    PostgreSQL
+                       raw
+                           |
+                           v
+                SQL Transformations
+                           |
+                           v
+                    PostgreSQL
+                     staging
+                           |
+                           v
+                 Analytics Loading
+                           |
+                           v
+                    PostgreSQL
+                    analytics
+                           |
+                           v
+                 Business Reporting
+
+             Apache Airflow orchestrates
+                 the entire workflow
 ```
 
-Apache Airflow orchestrates the workflow and manages task dependencies and execution status.
+### Data Layers
+
+| Layer | Purpose |
+|---|---|
+| `raw` | Stores ingested operational data and rejected records. |
+| `staging` | Contains cleaned, validated, and transformed datasets. |
+| `analytics` | Provides business-oriented tables for revenue analysis. |
 
 ## Tech Stack
 
-- **Language:** Python
-- **Database:** PostgreSQL
-- **Data Processing:** SQL, Python
-- **Orchestration:** Apache Airflow
-- **Containerization:** Docker, Docker Compose
-- **Testing:** pytest
+- **Language:** Python 3.12
+- **Database:** PostgreSQL 16
+- **Data transformation:** SQL and Python
+- **Orchestration:** Apache Airflow 3.3.2
+- **Containerization:** Docker and Docker Compose
+- **Automated testing:** pytest and pytest-cov
+- **Version control:** Git and GitHub
 
 ## Key Features
 
-- CSV ingestion and record validation
-- Rejected-record handling for invalid input data
-- Layered data architecture using `raw`, `staging`, and `analytics` schemas
-- Customer revenue and order revenue analytics
-- Automated data quality checks
-- Scheduled ETL orchestration with Apache Airflow
-- Idempotent analytics loading using PostgreSQL `ON CONFLICT ... DO UPDATE`
-- Python tests for data quality configuration and subprocess error handling
+- CSV ingestion and record validation.
+- Rejected-record handling for invalid input data.
+- Layered data architecture using PostgreSQL schemas.
+- SQL transformations and relational joins.
+- Customer and order revenue analytics.
+- Automated data quality checks based on business rules.
+- Scheduled ETL orchestration with Apache Airflow.
+- Error propagation from failed Python scripts to Airflow tasks.
+- Analytics loading using PostgreSQL conflict-handling logic.
+- Automated tests for data quality and subprocess error handling.
 
-## Analytics
+## Analytics Datasets
 
-The project currently provides two analytics tables:
+### `analytics.order_revenue`
 
-- `analytics.customer_revenue`: delivered revenue and delivered order counts by customer.
-- `analytics.order_revenue`: calculated order totals and order statuses.
+Provides order-level information, including:
 
-These datasets can support reporting on delivered revenue, customer activity, and order status distribution.
+- Order ID
+- Order date
+- Order status
+- Calculated order total
+
+### `analytics.customer_revenue`
+
+Provides customer-level metrics, including:
+
+- Customer ID
+- Customer name
+- Revenue from delivered orders
+- Number of delivered orders
+
+These datasets can support revenue reporting, customer analysis, and order-status monitoring.
 
 ## Data Quality
 
-The data quality script checks key business rules, including:
+The project implements 11 automated SQL checks covering:
 
-- Customers without email addresses or first names
-- Products without names or with negative prices or stock
-- Orders without valid customers or with invalid statuses
-- Order items without valid orders or products
-- Invalid quantities and negative unit prices
+- Customers without email addresses or first names.
+- Products without names.
+- Negative product prices or stock quantities.
+- Orders without valid customers.
+- Invalid or missing order statuses.
+- Order items referencing nonexistent orders or products.
+- Invalid quantities.
+- Negative unit prices.
 
-The latest validation on the current sample dataset reported **11 checks and 0 detected anomalies**.
+The quality script reports the number of detected anomalies and exits with a nonzero status when anomalies are found. This allows failures to propagate to the orchestration layer.
 
-## Pipeline Orchestration
+## Validation Results
 
-The Airflow DAG is named `ecommerce_pipeline` and contains four sequential tasks:
+The following results were observed during local validation against the current sample dataset.
 
-1. `prepare_tables`
-2. `load_staging`
-3. `refresh_analytics`
-4. `data_quality_checks`
+| Validation | Result |
+|---|---:|
+| Automated Python tests | 9 passed |
+| Overall test coverage | 98% |
+| Data quality rules | 11 |
+| Detected data quality anomalies | 0 |
+| Staging tables checked for duplicate IDs | 0 duplicates |
+| Revenue from delivered orders | 700.00 |
+| Revenue reconciliation | All three totals matched |
 
-The DAG is configured with a daily schedule. The latest six runs inspected were successful. Analytics validation queries also found no discrepancies between the stored revenue metrics and the values recalculated from the staging data.
+The delivered revenue was independently calculated from staging order items, order-level analytics, and customer-level analytics. Each calculation returned **700.00**.
+
+A manual Airflow pipeline rerun also completed successfully. Row counts remained unchanged across the six staging and analytics tables inspected.
+
+These results validate the current sample dataset and tested scenarios; they do not imply exhaustive integration testing for every possible input or failure condition.
+
+## Airflow Orchestration
+
+The DAG is named `ecommerce_pipeline`.
+
+It contains four sequential tasks:
+
+1. `prepare_tables` — creates the required staging and analytics tables.
+2. `load_staging` — loads transformed data into staging tables.
+3. `refresh_analytics` — refreshes the analytics datasets.
+4. `data_quality_checks` — executes the SQL-based quality checks.
+
+The DAG is configured to run daily at 02:00 in the `Africa/Casablanca` timezone.
+
+Airflow manages task dependencies and records execution states. A failed script causes its corresponding task to fail, preventing downstream tasks from running under the default success-based dependency rule.
 
 ## Project Structure
 
 ```text
-.
+ecommerce-data-platform/
 ├── airflow/
-│   └── dags/
-│       └── ecommerce_pipeline.py
+│   ├── dags/
+│   │   └── ecommerce_pipeline.py
+│   └── docker-compose.yml
 ├── data/
 │   └── raw/
 ├── src/
 │   ├── ingestion/
 │   └── database/
 ├── tests/
+│   ├── test_data_quality.py
+│   └── test_pipeline_errors.py
+├── .env.example
+├── .gitignore
 ├── docker-compose.yml
 ├── pytest.ini
 └── README.md
 ```
 
-*The structure above summarizes the main project components; verify it against the repository before publishing.*
+This tree highlights the main components. Additional files may exist within the source and configuration directories.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.12
-- Docker Desktop with Docker Compose
 - Git
+- Docker Desktop with Docker Compose
+- Python 3.12 for local testing
 
-### Setup
+### 1. Clone the repository
 
-1. Clone the repository.
-2. Create a local `.env` file based on `.env.example`.
-3. Configure the required database environment variables.
-4. Start the services using the repository's Docker Compose configuration.
-5. Run the pipeline using the configured Airflow DAG.
-6. Run the tests locally:
+```bash
+git clone https://github.com/Meryemeilla/ecommerce-data-engineering-platform.git
+cd ecommerce-data-engineering-platform
+```
+
+### 2. Configure environment variables
+
+Create a local `.env` file using `.env.example` as a template.
+
+On PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Review `.env.example` and configure the required database credentials and connection settings in `.env`. Do not commit real credentials.
+
+### 3. Start PostgreSQL
+
+From the project root:
+
+```bash
+docker compose up -d
+```
+
+Check the container status:
+
+```bash
+docker compose ps
+```
+
+### 4. Start Airflow
+
+From the project root, start the Airflow Compose configuration:
+
+```bash
+docker compose -f airflow/docker-compose.yml up -d
+```
+
+Open the Airflow interface:
+
+[http://localhost:8080](http://localhost:8080)
+
+Use the credentials configured by the local Airflow setup.
+
+### 5. Run the pipeline
+
+In Airflow:
+
+1. Locate `ecommerce_pipeline`.
+2. Enable the DAG if necessary.
+3. Trigger a manual run.
+4. Inspect the four task states and their logs.
+
+The PostgreSQL database, environment variables, and required tables must be configured before running the pipeline.
+
+### 6. Run automated tests
+
+Create and activate a virtual environment if needed, install the project's Python dependencies, then run:
 
 ```bash
 python -m pytest tests/ -v
 ```
 
-Follow the Docker Compose configuration and project scripts for the exact startup and database initialization commands.
+To generate a coverage report:
+
+```bash
+python -m pytest tests/ --cov --cov-report=term-missing
+```
+
+The latest recorded test run contained nine passing tests and 98% overall coverage.
 
 ## Security
 
-- Never commit `.env` files or real credentials.
-- Keep `.env.example` limited to placeholder values.
-- Review the repository for secrets before pushing to GitHub.
+- Keep `.env` out of version control.
+- Use placeholder values in `.env.example`.
+- Never publish database passwords, API keys, or other secrets.
+- Review staged Git changes before pushing to GitHub.
 
 ## Roadmap
 
-- [ ] Add integration tests for database transformations
-- [ ] Verify Airflow task failure behavior when data quality checks fail
-- [ ] Add dbt transformations, tests, and documentation
-- [ ] Build a BI dashboard
-- [ ] Add CI/CD with GitHub Actions
+- [ ] Add database integration tests.
+- [ ] Test data quality failure propagation through the real Airflow task.
+- [ ] Add stronger idempotence and data reconciliation tests.
+- [ ] Introduce dbt for transformation management and testing.
+- [ ] Build a BI dashboard for revenue and customer metrics.
+- [ ] Add continuous integration with GitHub Actions.
+- [ ] Add architecture diagrams and execution screenshots.
 
 ## Project Status
 
-**Core pipeline implemented and validated against the current sample dataset.** Further integration testing, documentation, and portfolio improvements are planned.
+**Core ETL workflow implemented and locally validated against the current sample dataset.**
 
+The project demonstrates layered data modeling, SQL transformations, automated data quality checks, Airflow orchestration, Docker-based development, and Python testing. Further integration testing and observability improvements remain planned.

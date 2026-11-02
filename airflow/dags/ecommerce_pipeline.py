@@ -31,6 +31,11 @@ def execute_scripts(script_names):
     ),
     schedule="0 2 * * *",
     catchup=False,
+    default_args={
+        "retries": 2,
+        "retry_delay": pendulum.duration(minutes=2),
+        "execution_timeout": pendulum.duration(minutes=15),
+    },
     tags=["ecommerce", "etl", "data-quality"],
 )
 def ecommerce_pipeline():

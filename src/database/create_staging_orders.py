@@ -1,3 +1,4 @@
+
 import os
 
 import psycopg2
@@ -5,35 +6,62 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-connection = psycopg2.connect(
-    host=os.getenv("DB_HOST"),
-    port=os.getenv("DB_PORT"),
-    database=os.getenv("DB_NAME"),
-    user=os.getenv("DB_USER"),
-    password=os.getenv("DB_PASSWORD"),
-)
 
-try:
-    with connection.cursor() as cursor:
-        cursor.execute("""
-            CREATE SCHEMA IF NOT EXISTS staging;
-        """)
+def main():
+    connection = psycopg2.connect(
+        host=os.getenv("DB_HOST"),
+        port=os.getenv("DB_PORT"),
+        database=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+    )
 
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS staging.orders (
-                order_id INTEGER PRIMARY KEY,
-                customer_id INTEGER NOT NULL,
-                order_date DATE NOT NULL,
-                status VARCHAR(50) NOT NULL
-            );
-        """)
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                CREATE SCHEMA IF NOT EXISTS staging;
+            """)
 
-    connection.commit()
-    print("Table staging.orders créée avec succès !")
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS staging.orders (
+                    order_id INTEGER PRIMARY KEY,
+                    customer_id INTEGER NOT NULL,
+                    order_date DATE NOT NULL,
+                    status VARCHAR(50) NOT NULL,
+                    CONSTRAINT fk_orders_customers
+                        FOREIGN KEY (customer_id)
+                        REFERENCES staging.customers (customer_id)
+                );
+            """)
 
-except Exception:
-    connection.rollback()
-    raise
+            cursor.execute("""
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1
+                        FROM pg_constraint
+                        WHERE conname = 'fk_orders_customers'
+                          AND conrelid = 'staging.orders'::regclass
+                    ) THEN
+                        ALTER TABLE staging.orders
+                        ADD CONSTRAINT fk_orders_customers
+                        FOREIGN KEY (customer_id)
+                        REFERENCES staging.customers (customer_id);
+                    END IF;
+                END
+                $$;
+            """)
 
-finally:
-    connection.close()
+        connection.commit()
+        print("Table staging.orders et sa clé étrangère vérifiées.")
+
+    except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        connection.close()
+
+
+if __name__ == "__main__":
+    main()

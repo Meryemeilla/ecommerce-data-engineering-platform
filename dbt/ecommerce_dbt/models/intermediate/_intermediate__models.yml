@@ -1,0 +1,68 @@
+
+version: 2
+
+models:
+  - name: int_order_items_enriched
+    description: >
+      Modèle intermédiaire qui enrichit les lignes de commande
+      avec les informations du client, de la commande et du produit.
+      Calcule également le montant total de chaque ligne.
+
+    columns:
+      - name: order_item_id
+        description: "Identifiant unique de la ligne de commande."
+
+      - name: order_id
+        description: "Identifiant de la commande associée."
+
+      - name: customer_id
+        description: "Identifiant du client ayant passé la commande."
+
+      - name: order_date
+        description: "Date à laquelle la commande a été passée."
+
+      - name: status
+        description: "Statut actuel de la commande."
+
+      - name: product_id
+        description: "Identifiant du produit commandé."
+
+      - name: product_name
+        description: "Nom du produit."
+
+      - name: category
+        description: "Catégorie du produit."
+
+      - name: quantity
+        description: "Quantité commandée du produit."
+
+      - name: unit_price
+        description: "Prix unitaire du produit au moment de la commande."
+
+      - name: line_total
+        description: "Montant total de la ligne : quantité multipliée par prix unitaire."
+
+  - name: int_orders_enriched
+    description: >
+      Modèle intermédiaire qui agrège les lignes de commande
+      afin de calculer le nombre total d'articles et le montant
+      total de chaque commande.
+
+    columns:
+      - name: order_id
+        description: "Identifiant unique de la commande."
+
+      - name: customer_id
+        description: "Identifiant du client ayant passé la commande."
+
+      - name: order_date
+        description: "Date de la commande."
+
+      - name: status
+        description: "Statut de la commande."
+
+      - name: total_items
+        description: "Nombre total de lignes d'articles dans la commande."
+
+      - name: order_total
+        description: "Montant total de la commande, calculé à partir des lignes."

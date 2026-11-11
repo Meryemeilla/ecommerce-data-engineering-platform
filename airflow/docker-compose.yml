@@ -16,6 +16,7 @@
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/state/airflow.db
       DB_HOST: postgres
       DB_PORT: "5432"
+      DBT_PROFILES_DIR: /opt/airflow/dbt_config
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
@@ -23,6 +24,8 @@
       - ../src:/opt/ecommerce/src:ro
       - ../logs:/opt/ecommerce/logs
       - ../.env:/opt/ecommerce/.env:ro
+      - ../dbt/ecommerce_dbt:/opt/airflow/dbt/ecommerce_dbt
+      - ./dbt_config:/opt/airflow/dbt_config:ro
     networks:
       - ecommerce-data-platform_default
 

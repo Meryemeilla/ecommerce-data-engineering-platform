@@ -1,5 +1,4 @@
-﻿
-import subprocess
+﻿import subprocess
 import sys
 
 import pendulum
@@ -8,6 +7,9 @@ from airflow.sdk import dag, task
 
 PROJECT_ROOT = "/opt/ecommerce"
 DATABASES_DIR = f"{PROJECT_ROOT}/src/database"
+
+DBT_PROJECT_DIR = "/opt/airflow/dbt/ecommerce_dbt"
+DBT_PROFILES_DIR = "/opt/airflow/dbt_config"
 
 
 def execute_scripts(script_names):
@@ -24,7 +26,7 @@ def execute_scripts(script_names):
 
 @dag(
     dag_id="ecommerce_pipeline",
-    description="Pipeline ETL e-commerce avec tâches Airflow séparées",
+    description="Pipeline ETL e-commerce avec Python, dbt et Airflow",
     start_date=pendulum.datetime(
         2026, 10, 1,
         tz="Africa/Casablanca",
@@ -36,7 +38,7 @@ def execute_scripts(script_names):
         "retry_delay": pendulum.duration(minutes=2),
         "execution_timeout": pendulum.duration(minutes=15),
     },
-    tags=["ecommerce", "etl", "data-quality"],
+    tags=["ecommerce", "etl", "dbt", "data-quality"],
 )
 def ecommerce_pipeline():
 
@@ -61,6 +63,20 @@ def ecommerce_pipeline():
         ])
 
     @task
+    def dbt_build():
+        """Construit les modèles dbt et exécute les tests."""
+        subprocess.run(
+            [
+                "dbt",
+                "build",
+                "--project-dir", DBT_PROJECT_DIR,
+                "--profiles-dir", DBT_PROFILES_DIR,
+            ],
+            check=True,
+            cwd=DBT_PROJECT_DIR,
+        )
+
+    @task
     def refresh_analytics():
         execute_scripts([
             "load_analytics_order_revenue.py",
@@ -75,10 +91,11 @@ def ecommerce_pipeline():
 
     prepare = prepare_tables()
     staging = load_staging()
+    dbt = dbt_build()
     analytics = refresh_analytics()
     quality = data_quality_checks()
 
-    prepare >> staging >> analytics >> quality
+    prepare >> staging >> dbt >> analytics >> quality
 
 
 ecommerce_pipeline()

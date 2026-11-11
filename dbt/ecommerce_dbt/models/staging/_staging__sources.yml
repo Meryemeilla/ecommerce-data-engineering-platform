@@ -1,0 +1,41 @@
+﻿
+version: 2
+
+sources:
+  - name: ecommerce_staging
+    description: >
+      Tables nettoyées et préparées par le pipeline Python.
+      Elles constituent les sources d'entrée des transformations dbt.
+    schema: staging
+
+    tables:
+      - name: customers
+        description: "Informations sur les clients de la plateforme e-commerce."
+
+      - name: orders
+        description: "Commandes passées par les clients."
+
+      - name: products
+        description: "Catalogue des produits disponibles."
+
+      - name: order_items
+        description: "Détail des produits et quantités associés à chaque commande."
+
+models:
+  - name: stg_customers
+    description: >
+      Modèle de staging des clients. Normalise les noms, les emails
+      et les informations géographiques.
+
+  - name: stg_orders
+    description: >
+      Modèle de staging des commandes. Normalise le statut de chaque commande.
+
+  - name: stg_products
+    description: >
+      Modèle de staging des produits. Nettoie les noms et catégories des produits.
+
+  - name: stg_order_items
+    description: >
+      Modèle de staging des lignes de commande. Prépare les quantités
+      et les prix unitaires pour les transformations suivantes.

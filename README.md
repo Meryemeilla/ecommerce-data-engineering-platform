@@ -1,65 +1,201 @@
 # E-commerce Data Engineering Platform
 
-An end-to-end data engineering project built with Python, PostgreSQL, Docker, Apache Airflow and automated testing.
+An end-to-end data engineering project built with **Python, PostgreSQL, dbt, Docker and Apache Airflow**.
 
-## Project Overview
-
-This project implements an e-commerce data pipeline designed to ingest raw CSV data, validate records, load structured staging tables, generate analytical datasets and enforce data quality rules.
-
-The pipeline is orchestrated with Apache Airflow and includes automated integration and unit tests.
+The platform ingests raw e-commerce CSV data, validates records, transforms data through layered models, runs data quality tests and orchestrates the workflow with Airflow.
 
 ## Architecture
 
 ```text
-CSV Files
-    |
-    v
-Python Data Ingestion
-    |
-    v
-PostgreSQL - RAW Layer
-    |
-    v
-Data Validation
-    |
-    v
-PostgreSQL - STAGING Layer
-    |
-    v
-SQL Transformations
-    |
-    v
-PostgreSQL - ANALYTICS Layer
-    |
-    v
-Data Quality Checks
-```
+                    CSV Files
+                        |
+                        v
+              Python Data Ingestion
+               Validation & Rejection
+                        |
+                        v
+                 PostgreSQL RAW
+                        |
+                        v
+               PostgreSQL STAGING
+                        |
+                        v
+                  dbt Transformations
+             Staging → Intermediate → Marts
+                        |
+                        v
+                 dbt Data Tests
+                        |
+                        v
+               Analytics Data Layer
+                        |
+                        v
+             Python Data Quality Checks
 
-Apache Airflow orchestrates the pipeline execution and manages retries and task timeouts.
+             Apache Airflow orchestrates
+                 the complete workflow
+```
 
 ## Tech Stack
 
-- **Programming:** Python
-- **Database:** PostgreSQL, SQL
-- **Containerization:** Docker, Docker Compose
-- **Orchestration:** Apache Airflow 3
-- **Testing:** Pytest, PostgreSQL integration tests
-- **Version Control & CI:** Git, GitHub Actions
+| Category | Technologies |
+|---|---|
+| Programming | Python 3.12 |
+| Database | PostgreSQL 16, SQL |
+| Transformation | dbt Core, dbt-postgres |
+| Orchestration | Apache Airflow 3.3.2 |
+| Containerization | Docker, Docker Compose |
+| Testing | pytest, dbt tests, PostgreSQL integration tests |
+| CI | GitHub Actions |
+| Version Control | Git, GitHub |
 
 ## Key Features
 
-- CSV data ingestion and validation
-- Rejected-record handling
-- Raw, staging and analytics data layers
-- SQL transformations and business analytics
-- Referential integrity through PostgreSQL foreign keys
-- Customer and order revenue analytics
-- Automated data quality checks
-- Idempotent analytics loading
-- Pipeline orchestration with Apache Airflow
-- Automatic retries and execution timeouts
-- Unit and PostgreSQL integration tests
-- Continuous integration with GitHub Actions
+- CSV ingestion using Python.
+- Data validation and rejected-record handling.
+- PostgreSQL RAW and STAGING layers.
+- SQL transformations and analytical data models.
+- Modular transformations using dbt.
+- dbt staging, intermediate and mart models.
+- Automated data quality tests with dbt.
+- Customer, product and order analytics.
+- Idempotent analytics loading.
+- Airflow orchestration with retries and execution timeouts.
+- Automated Python tests and PostgreSQL integration tests.
+- Continuous integration with GitHub Actions.
+
+## Data Architecture
+
+The project separates data processing into logical layers.
+
+### RAW
+
+Stores source records ingested from CSV files, including the raw data used for subsequent processing.
+
+### STAGING
+
+Contains cleaned and validated data prepared for transformation and analysis.
+
+### dbt Models
+
+The dbt project organizes SQL transformations into three layers:
+
+- **Staging:** source-oriented models that standardize and prepare data.
+- **Intermediate:** reusable business transformations and enriched datasets.
+- **Marts:** analytical models designed for reporting and business analysis.
+
+### Analytics
+
+Contains analytical datasets, including order revenue and customer revenue.
+
+## dbt Implementation
+
+The dbt project is located in:
+
+```text
+dbt/ecommerce_dbt/
+```
+
+It includes:
+
+- 10 dbt models.
+- 29 dbt data tests.
+- Source definitions.
+- Model documentation in YAML files.
+- Custom SQL data tests.
+
+Main model groups:
+
+```text
+models/
+├── staging/
+├── intermediate/
+└── marts/
+```
+
+The dbt build command executes model materializations and tests:
+
+```bash
+dbt build
+```
+
+**Latest verified dbt result:**
+
+```text
+PASS=39
+WARN=0
+ERROR=0
+SKIP=0
+TOTAL=39
+```
+
+This represents 10 models and 29 tests successfully executed.
+
+## Apache Airflow Orchestration
+
+The main DAG is:
+
+```text
+ecommerce_pipeline
+```
+
+It orchestrates five sequential tasks:
+
+| Task | Responsibility |
+|---|---|
+| `prepare_tables` | Create and prepare database tables |
+| `load_staging` | Load validated data into staging |
+| `dbt_build` | Build dbt models and execute dbt tests |
+| `refresh_analytics` | Refresh Python-based analytics tables |
+| `data_quality_checks` | Run additional data quality checks |
+
+### DAG Configuration
+
+- Schedule: Daily at 02:00
+- Timezone: `Africa/Casablanca`
+- Retries: 2
+- Retry delay: 2 minutes
+- Task execution timeout: 15 minutes
+- Catchup: Disabled
+
+**Latest verified manual execution:** all five Airflow tasks completed successfully.
+
+## Automated Testing
+
+The Python test suite includes:
+
+| Test Category | Tests |
+|---|---:|
+| Data quality | 7 |
+| Pipeline error handling | 2 |
+| PostgreSQL integration | 2 |
+| **Total** | **11** |
+
+Run the tests locally:
+
+```bash
+python -m pip install -r requirements-test.txt
+python -m pytest -v
+```
+
+The integration tests use a dedicated `ecommerce_test` database to avoid modifying the main development database.
+
+**Latest verified local result:**
+
+```text
+11 passed
+```
+
+## Continuous Integration
+
+GitHub Actions automatically runs the Python test suite on pushes and pull requests targeting the `main` branch.
+
+The workflow uses:
+
+- Python 3.12
+- PostgreSQL 16 service
+- A dedicated test database
+- pytest
 
 ## Project Structure
 
@@ -69,7 +205,19 @@ ecommerce-data-engineering-platform/
 ├── airflow/
 │   ├── dags/
 │   │   └── ecommerce_pipeline.py
-│   └── Dockerfile
+│   ├── dbt_config/
+│   │   └── profiles.yml
+│   ├── Dockerfile
+│   └── docker-compose.yml
+│
+├── dbt/
+│   └── ecommerce_dbt/
+│       ├── models/
+│       │   ├── staging/
+│       │   ├── intermediate/
+│       │   └── marts/
+│       ├── tests/
+│       └── dbt_project.yml
 │
 ├── data/
 │   └── raw/
@@ -81,7 +229,6 @@ ecommerce-data-engineering-platform/
 │
 ├── tests/
 │   ├── integration/
-│   │   └── test_postgres_integration.py
 │   ├── conftest.py
 │   ├── test_data_quality.py
 │   └── test_pipeline_errors.py
@@ -97,96 +244,78 @@ ecommerce-data-engineering-platform/
 └── README.md
 ```
 
-## Data Architecture
-
-The project uses three logical data layers:
-
-**1. Raw Layer**
-
-- Stores ingested source data.
-- Preserves raw records.
-- Handles invalid and rejected records.
-
-**2. Staging Layer**
-
-- Stores validated and structured data.
-- Applies data cleaning and transformations.
-- Enforces primary keys and foreign key relationships.
-
-**3. Analytics Layer**
-
-- Generates analytical datasets.
-- Calculates order revenue and customer revenue.
-- Supports business reporting and analytical queries.
-
-## Airflow Orchestration
-
-The main DAG is `ecommerce_pipeline`.
-
-It coordinates four tasks:
-
-1. `prepare_tables`
-2. `load_staging`
-3. `refresh_analytics`
-4. `data_quality_checks`
-
-**Execution configuration:**
-
-- Schedule: Daily at 02:00
-- Timezone: Africa/Casablanca
-- Retries: 2
-- Retry delay: 2 minutes
-- Task execution timeout: 15 minutes
-- Catchup: Disabled
-
-## Testing
-
-The project includes unit tests and PostgreSQL integration tests.
-
-Run the test suite locally:
-
-```bash
-python -m pip install -r requirements-test.txt
-python -m pytest -v
-```
-
-The integration tests use a dedicated `ecommerce_test` database to avoid modifying development data.
-
-**Latest local test result: 11 passed.**
-
-GitHub Actions automatically executes the test suite on pushes and pull requests targeting `main`.
-
 ## Setup
 
-1. Clone the repository:
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/Meryemeilla/ecommerce-data-engineering-platform.git
 cd ecommerce-data-engineering-platform
 ```
 
-2. Create and activate a Python virtual environment.
+### 2. Configure environment variables
 
-3. Install the required dependencies.
+Create a local `.env` file from the example:
 
-4. Copy `.env.example` to `.env` and configure your local database credentials.
+```bash
+cp .env.example .env
+```
 
-5. Start PostgreSQL using Docker Compose.
+Configure the database credentials and required environment variables locally.
 
-6. Create the dedicated `ecommerce_test` database and configure its credentials.
+### 3. Start PostgreSQL
 
-7. Run the data pipeline or use the configured Airflow DAG.
+Use the project's Docker Compose configuration to start the PostgreSQL service.
 
-**Security:** Never commit `.env` files, database passwords or other credentials.
+### 4. Run Python tests
+
+Install dependencies and execute:
+
+```bash
+python -m pip install -r requirements-test.txt
+python -m pytest -v
+```
+
+### 5. Run dbt
+
+Configure the dbt profile with the appropriate PostgreSQL connection environment variables, then run:
+
+```bash
+dbt debug
+dbt build
+```
+
+### 6. Run Airflow
+
+Start the Airflow services using the configuration in the `airflow/` directory and trigger the `ecommerce_pipeline` DAG.
+
+**Security:** Never commit `.env` files, database passwords, generated logs or other sensitive credentials.
+
+## Current Project Status
+
+| Component | Status |
+|---|---|
+| Python CSV ingestion | Completed |
+| PostgreSQL RAW layer | Completed |
+| PostgreSQL STAGING layer | Completed |
+| dbt transformations | Completed |
+| dbt tests | 29 passing |
+| Python automated tests | 11 passing |
+| PostgreSQL integration tests | Passing |
+| GitHub Actions | Functional for Python tests |
+| Airflow orchestration | Functional |
+| Airflow + dbt integration | Successfully tested |
+| BI dashboard | Planned |
+| Extended CI/CD for dbt | Planned |
 
 ## Roadmap
 
-- [ ] Add dbt for modular SQL transformations and documentation
-- [ ] Build a BI dashboard for business analytics
-- [ ] Expand automated testing and test coverage
-- [ ] Add advanced monitoring and pipeline observability
-- [ ] Improve CI/CD workflows
+- [ ] Add a BI dashboard using Power BI or Metabase.
+- [ ] Extend GitHub Actions to validate and test dbt models.
+- [ ] Improve pipeline monitoring and observability.
+- [ ] Expand test coverage and documentation.
+- [ ] Add further analytical use cases.
 
-## Project Status
+---
 
-Active portfolio project focused on practical data engineering concepts, database design, pipeline orchestration, data quality and automated testing.
+**Project Status:** Active portfolio project demonstrating practical data engineering workflows, SQL transformations, data quality, orchestration, automated testing and continuous integration.

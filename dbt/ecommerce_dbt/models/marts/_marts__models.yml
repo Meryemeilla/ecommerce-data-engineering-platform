@@ -1,0 +1,168 @@
+
+version: 2
+
+models:
+  - name: fct_orders
+    description: >
+      Table de faits contenant une ligne par commande.
+      Elle regroupe les informations de commande et les montants
+      calculés à partir des articles commandés.
+
+    columns:
+      - name: order_id
+        description: "Identifiant unique de la commande."
+        data_tests:
+          - not_null
+          - unique
+
+      - name: customer_id
+        description: "Identifiant du client associé à la commande."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
+
+      - name: order_date
+        description: "Date à laquelle la commande a été passée."
+
+      - name: status
+        description: "Statut actuel de la commande."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - pending
+                  - confirmed
+                  - shipped
+                  - delivered
+                  - cancelled
+
+      - name: total_items
+        description: "Nombre total de lignes d'articles dans la commande."
+
+      - name: order_total
+        description: "Montant total de la commande."
+
+  - name: dim_products
+    description: >
+      Dimension contenant les informations descriptives des produits,
+      notamment leur catégorie, leur prix et leur stock disponible.
+
+    columns:
+      - name: product_id
+        description: "Identifiant unique du produit."
+        data_tests:
+          - not_null
+          - unique
+
+      - name: product_name
+        description: "Nom du produit."
+        data_tests:
+          - not_null
+
+      - name: category
+        description: "Catégorie à laquelle appartient le produit."
+
+      - name: price
+        description: "Prix actuel du produit."
+        data_tests:
+          - not_null
+
+      - name: stock_quantity
+        description: "Quantité disponible en stock."
+        data_tests:
+          - not_null
+
+      - name: created_at
+        description: "Date de création de l'enregistrement du produit."
+
+  - name: fct_customer_revenue
+    description: >
+      Table de faits contenant les indicateurs de commandes et de chiffre
+      d'affaires par client. Elle conserve également les clients
+      n'ayant passé aucune commande.
+
+    columns:
+      - name: customer_id
+        description: "Identifiant unique du client."
+        data_tests:
+          - not_null
+          - unique
+
+      - name: full_name
+        description: "Nom complet du client."
+        data_tests:
+          - not_null
+
+      - name: city
+        description: "Ville de résidence du client."
+
+      - name: country
+        description: "Pays de résidence du client."
+
+      - name: total_orders
+        description: "Nombre total de commandes du client."
+        data_tests:
+          - not_null
+
+      - name: delivered_orders
+        description: "Nombre de commandes ayant le statut delivered."
+        data_tests:
+          - not_null
+
+      - name: total_order_amount
+        description: "Montant cumulé de toutes les commandes du client."
+        data_tests:
+          - not_null
+
+      - name: delivered_revenue
+        description: >
+          Montant cumulé des commandes livrées du client.
+          Cet indicateur ne représente pas nécessairement les paiements encaissés.
+        data_tests:
+          - not_null
+
+  - name: dim_customers
+    description: >
+      Dimension contenant les informations descriptives des clients,
+      notamment leur identité, leur adresse électronique et leur localisation.
+
+    columns:
+      - name: customer_id
+        description: "Identifiant unique du client."
+        data_tests:
+          - not_null
+          - unique
+
+      - name: first_name
+        description: "Prénom du client."
+
+      - name: last_name
+        description: "Nom de famille du client."
+
+      - name: full_name
+        description: "Nom complet obtenu à partir du prénom et du nom."
+        data_tests:
+          - not_null
+
+      - name: email
+        description: "Adresse électronique du client."
+        data_tests:
+          - not_null
+          - unique
+
+      - name: city
+        description: "Ville de résidence du client."
+        data_tests:
+          - not_null
+
+      - name: country
+        description: "Pays de résidence du client."
+        data_tests:
+          - not_null
+
+      - name: created_at
+        description: "Date de création de l'enregistrement du client."

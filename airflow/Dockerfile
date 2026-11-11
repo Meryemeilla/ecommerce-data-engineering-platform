@@ -2,4 +2,8 @@
 
 USER airflow
 
-RUN pip install --no-cache-dir psycopg2-binary python-dotenv
+RUN pip install --no-cache-dir \
+    psycopg2-binary \
+    python-dotenv \
+    dbt-core==1.12.6 \
+    dbt-postgres==1.11.0

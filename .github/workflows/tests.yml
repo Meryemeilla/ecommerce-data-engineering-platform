@@ -1,4 +1,4 @@
-﻿name: Python Tests
+﻿name: E-commerce Data Pipeline CI
 
 on:
   push:
@@ -7,7 +7,9 @@ on:
     branches: [main]
 
 jobs:
+  # Job 1 : tests Python existants
   tests:
+    name: Python Tests
     runs-on: ubuntu-latest
 
     services:
@@ -48,3 +50,112 @@ jobs:
 
       - name: Run tests
         run: python -m pytest tests/ -v
+
+  # Job 2 : préparation PostgreSQL et tests dbt
+  dbt_tests:
+    name: dbt Build and Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: ecommerce
+          POSTGRES_USER: ecommerce_user
+          POSTGRES_PASSWORD: ecommerce_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ecommerce_user -d ecommerce"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: ecommerce
+      DB_USER: ecommerce_user
+      DB_PASSWORD: ecommerce_password
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-test.txt
+          python -m pip install pandas
+          python -m pip install dbt-core==1.12.6 dbt-postgres==1.11.0
+
+      - name: Create dbt profile
+        run: |
+          mkdir -p ~/.dbt
+          cat > ~/.dbt/profiles.yml <<'EOF'
+          ecommerce_dbt:
+            target: ci
+            outputs:
+              ci:
+                type: postgres
+                host: "{{ env_var('DB_HOST') }}"
+                port: "{{ env_var('DB_PORT') | int }}"
+                user: "{{ env_var('DB_USER') }}"
+                password: "{{ env_var('DB_PASSWORD') }}"
+                dbname: "{{ env_var('DB_NAME') }}"
+                schema: dbt_ci
+                threads: 4
+          EOF
+
+      - name: Create RAW tables
+        run: |
+          python src/database/create_tables.py
+          python src/database/create_products_table.py
+          python src/database/create_orders_tables.py
+
+      - name: Create rejected tables
+        run: |
+          python src/database/create_rejected_table.py
+          python src/database/create_rejected_products_table.py
+          python src/database/create_rejected_orders_table.py
+          python src/database/create_rejected_order_items_table.py
+
+      - name: Ingest CSV data
+        run: |
+          python src/ingestion/load_customers.py
+          python src/ingestion/load_products.py
+          python src/ingestion/load_orders.py
+          python src/ingestion/load_order_items.py
+
+      - name: Create STAGING tables
+        run: |
+          python src/database/create_staging.py
+          python src/database/create_staging_products.py
+          python src/database/create_staging_orders.py
+          python src/database/create_staging_order_items.py
+
+      - name: Load STAGING tables
+        run: |
+          python src/database/load_staging_customers.py
+          python src/database/load_staging_products.py
+          python src/database/load_staging_orders.py
+          python src/database/load_staging_order_items.py
+
+      - name: Check dbt connection
+        run: |
+          dbt debug \
+            --project-dir dbt/ecommerce_dbt \
+            --profiles-dir ~/.dbt \
+            --target ci
+
+      - name: Build dbt models and run tests
+        run: |
+          dbt build \
+            --project-dir dbt/ecommerce_dbt \
+            --profiles-dir ~/.dbt \
+            --target ci

@@ -32,7 +32,9 @@ cursor.execute("""
         country TEXT,
         created_at TEXT,
         rejection_reason TEXT,
-        rejected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        rejected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT unique_customer_rejection
+            UNIQUE (customer_id, rejection_reason)
     );
 """)
 

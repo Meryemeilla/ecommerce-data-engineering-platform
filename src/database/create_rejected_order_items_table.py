@@ -28,6 +28,7 @@ cursor.execute("""
     CREATE TABLE IF NOT EXISTS raw.rejected_order_items (
         rejection_id SERIAL PRIMARY KEY,
 
+        source_row_number INTEGER NOT NULL,
         order_item_id TEXT,
         order_id TEXT,
         product_id TEXT,
@@ -38,8 +39,8 @@ cursor.execute("""
 
         rejected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-        CONSTRAINT unique_order_item_rejection
-        UNIQUE (order_item_id, rejection_reason)
+        CONSTRAINT unique_source_row_rejection
+        UNIQUE (source_row_number, rejection_reason)
     );
 """)
 

@@ -1,125 +1,350 @@
 # E-commerce Data Engineering Platform
 
-An end-to-end data engineering project built with **Python, PostgreSQL, dbt, Docker and Apache Airflow**.
+An end-to-end Data Engineering project that builds an e-commerce data pipeline using Python, PostgreSQL, Apache Airflow, dbt, Docker and Power BI.
 
-The platform ingests raw e-commerce CSV data, validates records, transforms data through layered models, runs data quality tests and orchestrates the workflow with Airflow.
+The platform ingests raw CSV data, validates and transforms records, builds analytical models, runs automated data quality tests and provides business insights through an interactive Power BI dashboard.
+
+---
+
+## Table of Contents
+
+- [Project Overview](#project-overview)
+- [Business Objectives](#business-objectives)
+- [Architecture](#architecture)
+- [Technology Stack](#technology-stack)
+- [Dataset](#dataset)
+- [Data Pipeline](#data-pipeline)
+- [Data Warehouse Design](#data-warehouse-design)
+- [Python Ingestion and Validation](#python-ingestion-and-validation)
+- [SQL and dbt Transformations](#sql-and-dbt-transformations)
+- [Data Quality and Testing](#data-quality-and-testing)
+- [Apache Airflow Orchestration](#apache-airflow-orchestration)
+- [Power BI Dashboard](#power-bi-dashboard)
+- [Project Structure](#project-structure)
+- [Installation and Setup](#installation-and-setup)
+- [Running the Pipeline](#running-the-pipeline)
+- [Environment Variables](#environment-variables)
+- [Results](#results)
+- [Security](#security)
+- [Roadmap](#roadmap)
+
+---
+
+## Project Overview
+
+The goal of this project is to develop a complete e-commerce data platform that transforms raw operational data into reliable analytical datasets.
+
+The pipeline follows a layered data architecture:
+
+- **RAW:** Stores ingested source data.
+- **STAGING:** Contains cleaned and validated data.
+- **DBT:** Implements SQL transformations and analytical models.
+- **POWER BI:** Provides interactive dashboards for business analysis.
+
+The project uses a larger synthetic dataset to simulate an e-commerce environment and demonstrate data processing and analytics at a representative scale.
+
+## Business Objectives
+
+The platform supports business analysis through questions such as:
+
+- How many orders were placed?
+- What is the total value of orders?
+- How many orders were delivered, cancelled or are still pending?
+- Which customers generate the highest delivered revenue?
+- How does order activity evolve over time?
+- How do sales and order volumes vary by customer location?
+- What is the distribution of orders by status?
 
 ## Architecture
 
 ```text
-                    CSV Files
-                        |
-                        v
-              Python Data Ingestion
-               Validation & Rejection
-                        |
-                        v
-                 PostgreSQL RAW
-                        |
-                        v
-               PostgreSQL STAGING
-                        |
-                        v
-                  dbt Transformations
-             Staging → Intermediate → Marts
-                        |
-                        v
-                 dbt Data Tests
-                        |
-                        v
-               Analytics Data Layer
-                        |
-                        v
-             Python Data Quality Checks
+                  SYNTHETIC CSV DATA
+                         |
+                         v
+              PYTHON INGESTION LAYER
+              - CSV ingestion
+              - Data validation
+              - Error handling
+                         |
+                         v
+                    POSTGRESQL
+                         |
+              +----------+----------+
+              |                     |
+              v                     v
+          RAW SCHEMA           REJECTED DATA
+              |
+              v
+        STAGING SCHEMA
+        - Data cleaning
+        - Standardization
+        - Referential checks
+              |
+              v
+             DBT
+        - Staging models
+        - Intermediate models
+        - Analytical models
+        - Data tests
+              |
+              v
+          DBT_DEV SCHEMA
+              |
+              v
+           POWER BI
+        - KPI reporting
+        - Customer analysis
+        - Order analysis
+        - Interactive filters
 
-             Apache Airflow orchestrates
-                 the complete workflow
+         APACHE AIRFLOW
+       Orchestrates pipeline tasks
 ```
 
-## Tech Stack
+## Technology Stack
 
-| Category | Technologies |
+| Technology | Purpose |
 |---|---|
-| Programming | Python 3.12 |
-| Database | PostgreSQL 16, SQL |
-| Transformation | dbt Core, dbt-postgres |
-| Orchestration | Apache Airflow 3.3.2 |
-| Containerization | Docker, Docker Compose |
-| Testing | pytest, dbt tests, PostgreSQL integration tests |
-| CI | GitHub Actions |
-| Version Control | Git, GitHub |
+| Python 3.12 | Data ingestion and validation |
+| PostgreSQL 16 | Relational database and data warehouse |
+| SQL | Data querying and transformations |
+| Docker | Database containerization |
+| Docker Compose | Local environment management |
+| Apache Airflow 3.3.2 | Pipeline orchestration |
+| dbt Core 1.12.6 | SQL transformations and data testing |
+| dbt-postgres 1.11.0 | PostgreSQL adapter for dbt |
+| pytest | Automated testing |
+| GitHub Actions | Continuous Integration |
+| Power BI Desktop | Data visualization and reporting |
+| Git and GitHub | Version control and project hosting |
 
-## Key Features
+## Dataset
 
-- CSV ingestion using Python.
-- Data validation and rejected-record handling.
-- PostgreSQL RAW and STAGING layers.
-- SQL transformations and analytical data models.
-- Modular transformations using dbt.
-- dbt staging, intermediate and mart models.
-- Automated data quality tests with dbt.
-- Customer, product and order analytics.
-- Idempotent analytics loading.
-- Airflow orchestration with retries and execution timeouts.
-- Automated Python tests and PostgreSQL integration tests.
-- Continuous integration with GitHub Actions.
+The project uses a deterministic synthetic e-commerce dataset generated with Python.
 
-## Data Architecture
+The generator is located at:
 
-The project separates data processing into logical layers.
+`scripts/generate_dataset.py`
+
+The generated CSV files are stored in:
+
+`data/generated/`
+
+### Dataset Statistics
+
+| Entity | Number of records |
+|---|---:|
+| Customers | 1,000 |
+| Products | 100 |
+| Orders | 5,000 |
+| Order Items | 20,017 |
+| **Total** | **26,117** |
+
+**Date range:** January 2024 – December 2025.
+
+The dataset contains customer information, product details, orders and order items.
+
+The generator uses a fixed random seed to make the dataset reproducible.
+
+The original sample data in `data/raw/` is preserved separately from the larger generated dataset.
+
+## Data Pipeline
+
+### 1. Data Generation
+
+The script `scripts/generate_dataset.py` generates synthetic customer, product, order and order-item records.
+
+### 2. Data Ingestion
+
+Python scripts load CSV records into PostgreSQL.
+
+The ingestion layer handles:
+
+- CSV reading;
+- Record validation;
+- Database insertion;
+- Duplicate handling;
+- Rejected record management;
+- Repeatable loading through conflict handling.
+
+### 3. RAW Layer
+
+The RAW schema stores the ingested source records.
+
+### 4. STAGING Layer
+
+The STAGING schema contains prepared data:
+
+- Normalized emails and text fields;
+- Cleaned product and customer information;
+- Standardized order statuses;
+- Validated quantities and prices;
+- Checked relationships between customers, orders and products.
+
+### 5. dbt Transformations
+
+dbt transforms staging data into analytical models using SQL.
+
+### 6. Power BI
+
+Power BI connects to PostgreSQL and consumes analytical views for reporting and business analysis.
+
+## Data Warehouse Design
+
+The project uses three main data layers.
 
 ### RAW
 
-Stores source records ingested from CSV files, including the raw data used for subsequent processing.
+Stores the data ingested from CSV files.
 
 ### STAGING
 
-Contains cleaned and validated data prepared for transformation and analysis.
+Contains cleaned and standardized data prepared by Python.
 
-### dbt Models
+### DBT Analytical Layer
 
-The dbt project organizes SQL transformations into three layers:
+Contains the dbt models in the `dbt_dev` schema.
 
-- **Staging:** source-oriented models that standardize and prepare data.
-- **Intermediate:** reusable business transformations and enriched datasets.
-- **Marts:** analytical models designed for reporting and business analysis.
+The dbt models are organized into three groups:
 
-### Analytics
+| Layer | Models | Purpose |
+|---|---|---|
+| Staging | `stg_customers`, `stg_orders`, `stg_products`, `stg_order_items` | Standardize source data |
+| Intermediate | `int_order_items_enriched`, `int_orders_enriched` | Join and aggregate business data |
+| Marts | `dim_customers`, `dim_products`, `fct_orders`, `fct_customer_revenue` | Provide analytical datasets |
 
-Contains analytical datasets, including order revenue and customer revenue.
+The project currently uses views for its 10 dbt models.
 
-## dbt Implementation
+### Data Modeling Concepts
 
-The dbt project is located in:
+- `source()` references upstream PostgreSQL staging tables.
+- `ref()` defines dependencies between dbt models.
+- Customer and product dimensions provide descriptive information.
+- Fact models provide order and revenue metrics.
 
-```text
-dbt/ecommerce_dbt/
+## Python Ingestion and Validation
+
+Python is responsible for loading and validating source records.
+
+Main ingestion scripts include:
+
+- `src/ingestion/load_customers.py`
+- `src/ingestion/load_products.py`
+- `src/ingestion/load_orders.py`
+- `src/ingestion/load_order_items.py`
+
+The ingestion process includes validation rules such as:
+
+- Missing or invalid email addresses;
+- Invalid dates;
+- Duplicate identifiers;
+- Invalid quantities;
+- Negative prices;
+- Missing customer references;
+- Missing product or order references.
+
+Rejected records are stored separately for inspection instead of being silently discarded.
+
+## SQL and dbt Transformations
+
+dbt manages the analytical SQL transformations.
+
+### Staging Models
+
+- `stg_customers`
+- `stg_orders`
+- `stg_products`
+- `stg_order_items`
+
+### Intermediate Models
+
+`int_order_items_enriched` joins order items with orders and products to calculate line totals.
+
+`int_orders_enriched` aggregates order items to calculate order-level metrics.
+
+### Analytical Models
+
+- `dim_customers`: Customer dimension.
+- `dim_products`: Product dimension.
+- `fct_orders`: Order-level analytical facts.
+- `fct_customer_revenue`: Customer-level revenue metrics.
+
+### Example: Order Line Calculation
+
+```sql
+oi.quantity * oi.unit_price AS line_total
 ```
 
-It includes:
+### Example: Order Aggregation
 
-- 10 dbt models.
-- 29 dbt data tests.
-- Source definitions.
-- Model documentation in YAML files.
-- Custom SQL data tests.
-
-Main model groups:
-
-```text
-models/
-├── staging/
-├── intermediate/
-└── marts/
+```sql
+SELECT
+    order_id,
+    customer_id,
+    order_date,
+    status,
+    COUNT(order_item_id) AS total_items,
+    SUM(line_total) AS order_total
+FROM {{ ref('int_order_items_enriched') }}
+GROUP BY
+    order_id,
+    customer_id,
+    order_date,
+    status
 ```
 
-The dbt build command executes model materializations and tests:
+## Data Quality and Testing
+
+Data quality is validated at different levels.
+
+### dbt Lineage Graph
+
+The following graph illustrates the dependencies between source tables, staging models, intermediate models and analytical models.
+
+![dbt Lineage Graph](docs/images/dbtGraph.PNG)
+
+### Python Tests with pytest
+
+The original project test suite contains 11 tests:
+
+| Test Category | Number of Tests |
+|---|---:|
+| Data Quality | 7 |
+| Pipeline Errors | 2 |
+| PostgreSQL Integration | 2 |
+| **Total** | **11** |
+
+The PostgreSQL integration tests include:
+
+- Database connectivity;
+- Temporary table operations;
+- Idempotence of analytical loading.
+
+The test database `ecommerce_test` is separated from the main development database.
+
+Run the tests with:
 
 ```bash
-dbt build
+python -m pytest -v
 ```
 
-**Latest verified dbt result:**
+### dbt Data Tests
+
+The dbt project contains:
+
+- 10 models;
+- 29 data tests;
+- 4 declared sources.
+
+The tests cover data integrity and business rules, including uniqueness, null values, accepted values, relationships and custom validation rules.
+
+Run the dbt project with:
+
+```bash
+dbt build --project-dir dbt/ecommerce_dbt
+```
+
+**Latest recorded dbt build result:**
 
 ```text
 PASS=39
@@ -129,73 +354,154 @@ SKIP=0
 TOTAL=39
 ```
 
-This represents 10 models and 29 tests successfully executed.
+This corresponds to 10 models and 29 tests.
 
 ## Apache Airflow Orchestration
 
-The main DAG is:
+Apache Airflow orchestrates the main data pipeline through the DAG:
 
-```text
-ecommerce_pipeline
-```
+`airflow/dags/ecommerce_pipeline.py`
 
-It orchestrates five sequential tasks:
+The DAG contains the following tasks:
 
 | Task | Responsibility |
 |---|---|
-| `prepare_tables` | Create and prepare database tables |
-| `load_staging` | Load validated data into staging |
-| `dbt_build` | Build dbt models and execute dbt tests |
-| `refresh_analytics` | Refresh Python-based analytics tables |
-| `data_quality_checks` | Run additional data quality checks |
+| `prepare_tables` | Prepare database tables |
+| `load_staging` | Load staging data |
+| `dbt_build` | Execute dbt transformations and tests |
+| `refresh_analytics` | Refresh analytical data |
+| `data_quality_checks` | Run data quality checks |
 
-### DAG Configuration
+### Scheduling Configuration
 
 - Schedule: Daily at 02:00
 - Timezone: `Africa/Casablanca`
+- `catchup=False`
 - Retries: 2
 - Retry delay: 2 minutes
 - Task execution timeout: 15 minutes
-- Catchup: Disabled
 
-**Latest verified manual execution:** all five Airflow tasks completed successfully.
+The retry behavior was tested using a temporary DAG designed to fail deliberately. The test confirmed that two retries result in three total attempts.
 
-## Automated Testing
+The main DAG was previously executed successfully in the original project environment. The complete Airflow workflow still requires final end-to-end validation against the enlarged `ecommerce_bi` dataset.
 
-The Python test suite includes:
+### Airflow DAG
 
-| Test Category | Tests |
-|---|---:|
-| Data quality | 7 |
-| Pipeline error handling | 2 |
-| PostgreSQL integration | 2 |
-| **Total** | **11** |
+The DAG below illustrates the tasks and dependencies involved in the pipeline orchestration.
 
-Run the tests locally:
+![Airflow DAG](docs/images/Airflow_dag.PNG)
 
-```bash
-python -m pip install -r requirements-test.txt
-python -m pytest -v
+## Power BI Dashboard
+
+The project includes an interactive Power BI dashboard:
+
+**E-commerce Sales Analytics Dashboard**
+
+Power BI connects to PostgreSQL and imports the following analytical views:
+
+- `fct_orders`
+- `fct_customer_revenue`
+- `dim_customers`
+- `dim_products`
+
+### Data Model Relationships
+
+The customer dimension is connected to the order and customer revenue fact views through `customer_id`.
+
+The model uses one-to-many relationships with single-direction filtering.
+
+### Key Performance Indicators
+
+The dashboard includes the following measures:
+
+| KPI | Description |
+|---|---|
+| Total Orders | Number of distinct orders |
+| Total Order Amount | Total value of all orders |
+| Delivered Orders | Number of delivered orders |
+| Delivered Revenue | Value of delivered orders |
+| Revenue by Status | Order value respecting the selected status |
+
+### Example DAX Measures
+
+**Total Orders**
+
+```dax
+Total Orders =
+DISTINCTCOUNT(fct_orders[order_id])
 ```
 
-The integration tests use a dedicated `ecommerce_test` database to avoid modifying the main development database.
+**Total Order Amount**
 
-**Latest verified local result:**
-
-```text
-11 passed
+```dax
+Total Order Amount =
+SUM(fct_orders[order_total])
 ```
 
-## Continuous Integration
+**Delivered Orders**
 
-GitHub Actions automatically runs the Python test suite on pushes and pull requests targeting the `main` branch.
+```dax
+Delivered Orders =
+CALCULATE(
+    DISTINCTCOUNT(fct_orders[order_id]),
+    fct_orders[status] = "delivered"
+)
+```
 
-The workflow uses:
+**Delivered Revenue**
 
-- Python 3.12
-- PostgreSQL 16 service
-- A dedicated test database
-- pytest
+```dax
+Delivered Revenue =
+CALCULATE(
+    SUM(fct_orders[order_total]),
+    fct_orders[status] = "delivered"
+)
+```
+
+**Revenue by Status**
+
+```dax
+Revenue by Status =
+SUM(fct_orders[order_total])
+```
+
+### Power BI Data Model
+
+![Power BI Data Model](docs/images/modelePowerBI.PNG)
+
+### Dashboard Visuals
+
+The dashboard includes:
+
+- KPI cards;
+- Order distribution by status;
+- Monthly order trends;
+- Top 10 customers by revenue;
+- Interactive status filter;
+- Customer city filter;
+- Order date range filter.
+
+The customer city slicer uses `dim_customers[city]` to ensure correct filter propagation through the customer dimension.
+
+### Dashboard Validation
+
+The following functional checks were performed:
+
+- KPI values checked without filters;
+- Status filter tested;
+- City filter tested;
+- Date range filter tested;
+- Top 10 customer chart tested with different order statuses;
+- Combined filters tested;
+- Filter reset behavior tested.
+
+The dashboard responded correctly during these functional checks.
+
+The Power BI dashboard file is maintained separately as a `.pbix` file.
+
+### Dashboard Preview
+
+![E-commerce Sales Analytics Dashboard](docs/images/DashboardPowerBI.PNG)
 
 ## Project Structure
 
@@ -203,12 +509,12 @@ The workflow uses:
 ecommerce-data-engineering-platform/
 │
 ├── airflow/
-│   ├── dags/
-│   │   └── ecommerce_pipeline.py
-│   ├── dbt_config/
-│   │   └── profiles.yml
-│   ├── Dockerfile
-│   └── docker-compose.yml
+│   └── dags/
+│       └── ecommerce_pipeline.py
+│
+├── data/
+│   ├── raw/
+│   └── generated/
 │
 ├── dbt/
 │   └── ecommerce_dbt/
@@ -219,13 +525,12 @@ ecommerce-data-engineering-platform/
 │       ├── tests/
 │       └── dbt_project.yml
 │
-├── data/
-│   └── raw/
+├── scripts/
+│   └── generate_dataset.py
 │
 ├── src/
 │   ├── ingestion/
-│   ├── database/
-│   └── run_pipeline.py
+│   └── database/
 │
 ├── tests/
 │   ├── integration/
@@ -237,85 +542,255 @@ ecommerce-data-engineering-platform/
 │   └── workflows/
 │       └── tests.yml
 │
+├── docs/
+│   └── images/
+│
 ├── docker-compose.yml
-├── requirements-test.txt
+├── requirements.txt
 ├── .env.example
 ├── .gitignore
 └── README.md
 ```
 
-## Setup
+*The structure above highlights the main project components. Some generated data, local configuration and environment files are intentionally excluded from version control.*
 
-### 1. Clone the repository
+## Installation and Setup
+
+### Prerequisites
+
+Install the following tools:
+
+- Python 3.12
+- Docker Desktop and Docker Compose
+- Git
+- PostgreSQL client tools (optional)
+- dbt Core and dbt-postgres
+- Apache Airflow 3.3.2
+- Power BI Desktop (for dashboard analysis)
+
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/Meryemeilla/ecommerce-data-engineering-platform.git
+
 cd ecommerce-data-engineering-platform
 ```
 
-### 2. Configure environment variables
+### 2. Create a Virtual Environment
 
-Create a local `.env` file from the example:
+Windows PowerShell:
 
-```bash
-cp .env.example .env
+```powershell
+python -m venv .venv
+
+.\.venv\Scripts\Activate.ps1
 ```
 
-Configure the database credentials and required environment variables locally.
+### 3. Install Dependencies
 
-### 3. Start PostgreSQL
+```powershell
+python -m pip install -r requirements.txt
+```
 
-Use the project's Docker Compose configuration to start the PostgreSQL service.
+### 4. Configure Environment Variables
 
-### 4. Run Python tests
+Copy the example environment file:
 
-Install dependencies and execute:
+```powershell
+Copy-Item .env.example .env
+```
 
-```bash
-python -m pip install -r requirements-test.txt
+Update the database credentials in `.env`.
+
+### 5. Start PostgreSQL
+
+```powershell
+docker compose up -d
+```
+
+### 6. Configure dbt
+
+Configure the dbt profile in:
+
+```text
+%USERPROFILE%\.dbt\profiles.yml
+```
+
+The dbt profile must point to the PostgreSQL database and the appropriate schema.
+
+Validate the connection:
+
+```powershell
+dbt debug --project-dir dbt/ecommerce_dbt
+```
+
+## Running the Pipeline
+
+The commands below describe the main stages of the local workflow. Use the scripts and module names present in the repository.
+
+### 1. Generate the Synthetic Dataset
+
+```powershell
+python scripts/generate_dataset.py
+```
+
+### 2. Configure the BI Dataset
+
+For the generated dataset, set the environment variables in PowerShell:
+
+```powershell
+$env:DB_NAME = "ecommerce_bi"
+$env:DATA_DIR = "data/generated"
+```
+
+These variables apply to the current PowerShell session.
+
+### 3. Prepare Database Tables
+
+Execute the database setup scripts to create the RAW, rejected-record and STAGING tables.
+
+### 4. Ingest CSV Data
+
+Run the Python ingestion scripts for customers, products, orders and order items.
+
+### 5. Load Staging Data
+
+Run the staging loading scripts to populate the staging schema.
+
+### 6. Build dbt Models and Run Tests
+
+```powershell
+dbt build --project-dir dbt/ecommerce_dbt
+```
+
+### 7. Generate dbt Documentation
+
+```powershell
+dbt docs generate --project-dir dbt/ecommerce_dbt
+```
+
+To view the documentation locally:
+
+```powershell
+dbt docs serve --project-dir dbt/ecommerce_dbt
+```
+
+### 8. Run Python Tests
+
+```powershell
 python -m pytest -v
 ```
 
-### 5. Run dbt
+### 9. Open the Power BI Dashboard
 
-Configure the dbt profile with the appropriate PostgreSQL connection environment variables, then run:
+Connect Power BI Desktop to the PostgreSQL database and select the analytical views in the `dbt_dev` schema.
 
-```bash
-dbt debug
-dbt build
+## Environment Variables
+
+The project uses environment variables for database configuration.
+
+Typical variables include:
+
+```env
+DB_HOST=localhost
+DB_PORT=5433
+DB_NAME=ecommerce
+DB_USER=ecommerce_user
+DB_PASSWORD=your_password
+
+DATA_DIR=data/raw
+
+TEST_DB_HOST=localhost
+TEST_DB_PORT=5433
+TEST_DB_NAME=ecommerce_test
+TEST_DB_USER=ecommerce_user
+TEST_DB_PASSWORD=your_test_password
 ```
 
-### 6. Run Airflow
+The actual `.env` file must remain local and must never be committed.
 
-Start the Airflow services using the configuration in the `airflow/` directory and trigger the `ecommerce_pipeline` DAG.
+The BI environment uses the `ecommerce_bi` database and the `data/generated` directory.
 
-**Security:** Never commit `.env` files, database passwords, generated logs or other sensitive credentials.
+## Results
 
-## Current Project Status
+### Generated Dataset
 
-| Component | Status |
-|---|---|
-| Python CSV ingestion | Completed |
-| PostgreSQL RAW layer | Completed |
-| PostgreSQL STAGING layer | Completed |
-| dbt transformations | Completed |
-| dbt tests | 29 passing |
-| Python automated tests | 11 passing |
-| PostgreSQL integration tests | Passing |
-| GitHub Actions | Functional for Python tests |
-| Airflow orchestration | Functional |
-| Airflow + dbt integration | Successfully tested |
-| BI dashboard | Planned |
-| Extended CI/CD for dbt | Planned |
+- 1,000 customers;
+- 100 products;
+- 5,000 orders;
+- 20,017 order items.
+
+### Data Quality
+
+The generated dataset was validated for:
+
+- Missing customer references;
+- Missing order references;
+- Missing product references;
+- Invalid quantities;
+- Negative prices;
+- Invalid email formatting.
+
+The staging checks returned no issues for the tested conditions.
+
+### Analytical Results
+
+The following values were obtained from the enlarged BI dataset:
+
+| Metric | Result |
+|---|---:|
+| Total orders | 5,000 |
+| Total order amount | 435,827,074.36 |
+| Delivered orders | 986 |
+| Cancelled orders | 995 |
+| Confirmed orders | 1,021 |
+| Pending orders | 1,015 |
+| Shipped orders | 983 |
+
+**Important:** Total Order Amount includes orders across all statuses. Delivered Revenue only includes delivered orders. These metrics should not be interpreted as equivalent to collected cash or accounting revenue.
+
+### Testing Results
+
+- 11 Python tests passed in the original test suite.
+- 29 dbt data tests passed in the latest recorded dbt build.
+- The latest dbt build completed with 39 successful resources (10 models and 29 tests).
+- Power BI functional filter and KPI checks were successful.
+
+## Security
+
+- Never commit `.env` files.
+- Do not publish database passwords or credentials.
+- Use `.env.example` to document required variables without real secrets.
+- Keep local database configuration separate from source code.
+- Use dedicated databases for development, testing and BI experimentation.
 
 ## Roadmap
 
-- [ ] Add a BI dashboard using Power BI or Metabase.
-- [ ] Extend GitHub Actions to validate and test dbt models.
-- [ ] Improve pipeline monitoring and observability.
-- [ ] Expand test coverage and documentation.
-- [ ] Add further analytical use cases.
+- [x] Build Python CSV ingestion scripts
+- [x] Create PostgreSQL RAW and STAGING layers
+- [x] Implement data validation and rejected-record handling
+- [x] Develop SQL transformations
+- [x] Integrate dbt models and data tests
+- [x] Create a synthetic dataset for BI analysis
+- [x] Add automated Python tests
+- [x] Configure GitHub Actions for CI
+- [x] Build the Power BI dashboard
+- [x] Validate dashboard KPIs and interactive filters
+- [ ] Perform final end-to-end Airflow validation with the enlarged BI dataset
+- [ ] Improve monitoring and pipeline observability
+- [ ] Add incremental dbt models
+- [ ] Improve deployment configuration
 
 ---
 
-**Project Status:** Active portfolio project demonstrating practical data engineering workflows, SQL transformations, data quality, orchestration, automated testing and continuous integration.
+## Project Status
+
+**Portfolio project – actively developed.**
+
+This project demonstrates practical Data Engineering skills, including Python ingestion, PostgreSQL data modeling, SQL transformations, dbt testing, Airflow orchestration, CI automation and Power BI reporting.
+
+## Author
+
+**Meryeme**
+
+[GitHub Repository](https://github.com/Meryemeilla/ecommerce-data-engineering-platform)

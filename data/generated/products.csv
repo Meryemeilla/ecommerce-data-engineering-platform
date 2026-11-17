@@ -1,0 +1,101 @@
+product_id,product_name,category,price,stock_quantity,created_at
+1,Football Model 1,Sports,7467.09,195,2025-11-30
+2,Coffee Maker Model 2,Home & Kitchen,5341.45,465,2024-07-10
+3,Bookshelf Model 3,Furniture,6717.87,76,2024-02-05
+4,Hair Dryer Model 4,Beauty,9273.81,331,2024-10-29
+5,Air Fryer Model 5,Home & Kitchen,13247.54,245,2024-03-03
+6,Monitor Model 6,Electronics,5776.08,214,2024-07-23
+7,Bicycle Model 7,Sports,3774.76,410,2025-07-10
+8,Tablet Model 8,Electronics,11739.64,183,2025-05-06
+9,Sunscreen Model 9,Beauty,5193.31,289,2025-05-29
+10,Coffee Table Model 10,Furniture,4093.01,13,2024-11-22
+11,Shampoo Model 11,Beauty,488.09,415,2024-10-14
+12,Smartwatch Model 12,Electronics,7965.01,392,2025-08-21
+13,Jacket Model 13,Clothing,1547.01,336,2024-09-03
+14,Sofa Model 14,Furniture,12253.46,469,2024-02-27
+15,Shirt Model 15,Clothing,5354.33,429,2024-06-26
+16,Sneakers Model 16,Clothing,8908.17,412,2025-12-15
+17,Sofa Model 17,Furniture,471.69,358,2024-12-26
+18,Hair Dryer Model 18,Beauty,2174.43,485,2024-07-11
+19,Cookware Set Model 19,Home & Kitchen,4670.34,251,2024-02-08
+20,Laptop Model 20,Electronics,3527.72,112,2024-01-21
+21,Sunscreen Model 21,Beauty,60.22,469,2025-09-20
+22,Jacket Model 22,Clothing,5144.35,90,2024-11-27
+23,Laptop Model 23,Electronics,2258.29,360,2024-05-25
+24,Webcam Model 24,Electronics,12917.01,491,2024-03-15
+25,Bed Frame Model 25,Furniture,14131.75,202,2025-08-23
+26,Headphones Model 26,Electronics,4561.39,69,2024-06-10
+27,Football Model 27,Sports,11888.05,491,2025-05-13
+28,Running Shoes Model 28,Sports,2654.33,495,2025-07-29
+29,Bicycle Model 29,Sports,11815.53,114,2025-11-12
+30,Shampoo Model 30,Beauty,5706.84,375,2025-12-06
+31,Desk Model 31,Furniture,2706.74,0,2025-12-19
+32,Sunscreen Model 32,Beauty,12768.82,394,2025-08-04
+33,Wireless Mouse Model 33,Electronics,9055.71,471,2025-09-18
+34,Jeans Model 34,Clothing,14053.48,72,2024-12-05
+35,Yoga Mat Model 35,Sports,3608.04,163,2024-06-20
+36,Yoga Mat Model 36,Sports,12333.84,343,2025-10-16
+37,Running Shoes Model 37,Sports,6727.12,135,2024-08-02
+38,Jeans Model 38,Clothing,5289.69,402,2024-04-20
+39,Yoga Mat Model 39,Sports,769.8,224,2025-03-05
+40,Shirt Model 40,Clothing,7421.58,193,2024-12-25
+41,Sunscreen Model 41,Beauty,1566.36,245,2025-08-14
+42,Fitness Band Model 42,Sports,3422.46,231,2024-03-16
+43,Monitor Model 43,Electronics,350.17,133,2024-04-17
+44,Headphones Model 44,Electronics,2593.07,192,2024-06-13
+45,Yoga Mat Model 45,Sports,8228.34,459,2024-04-05
+46,Sofa Model 46,Furniture,14779.88,457,2025-05-09
+47,Yoga Mat Model 47,Sports,6498.28,334,2024-06-17
+48,Sunscreen Model 48,Beauty,2398.7,51,2024-12-05
+49,Sneakers Model 49,Clothing,6168.73,283,2025-07-07
+50,Bed Frame Model 50,Furniture,4258.77,121,2024-04-08
+51,Tablet Model 51,Electronics,8597.96,430,2025-05-17
+52,T-Shirt Model 52,Clothing,5444.39,218,2024-03-30
+53,Bed Frame Model 53,Furniture,9395.11,245,2024-07-23
+54,Laptop Model 54,Electronics,3143.95,326,2024-10-25
+55,Smartwatch Model 55,Electronics,12664.35,157,2025-02-11
+56,Air Fryer Model 56,Home & Kitchen,13428.42,135,2024-04-03
+57,Bicycle Model 57,Sports,5843.53,189,2025-01-25
+58,Desk Model 58,Furniture,6714.34,134,2025-03-26
+59,Microwave Model 59,Home & Kitchen,3432.32,137,2025-07-31
+60,Wireless Mouse Model 60,Electronics,11295.92,341,2024-04-09
+61,Headphones Model 61,Electronics,12132.29,211,2025-08-26
+62,T-Shirt Model 62,Clothing,12619.92,419,2025-06-19
+63,Cookware Set Model 63,Home & Kitchen,10321.67,479,2025-05-01
+64,Shampoo Model 64,Beauty,7170.12,40,2025-02-08
+65,Yoga Mat Model 65,Sports,7556.42,461,2025-06-13
+66,Hair Dryer Model 66,Beauty,2254.34,486,2025-04-04
+67,Jacket Model 67,Clothing,14583.86,413,2024-07-16
+68,T-Shirt Model 68,Clothing,6379.45,349,2025-03-21
+69,Jacket Model 69,Clothing,12519.92,132,2024-11-23
+70,Yoga Mat Model 70,Sports,1351.06,284,2025-02-10
+71,Perfume Model 71,Beauty,12856.53,266,2025-04-14
+72,USB Hub Model 72,Electronics,8834.26,400,2025-03-05
+73,Tablet Model 73,Electronics,2287.15,290,2025-08-25
+74,Face Cream Model 74,Beauty,13877.68,288,2024-04-13
+75,Sofa Model 75,Furniture,13208.03,449,2025-02-24
+76,Coffee Table Model 76,Furniture,9839.08,292,2025-09-15
+77,Blender Model 77,Home & Kitchen,2624.39,206,2024-05-27
+78,Hair Dryer Model 78,Beauty,10228.15,205,2024-02-09
+79,Microwave Model 79,Home & Kitchen,10373.18,25,2025-05-01
+80,Bookshelf Model 80,Furniture,352.48,418,2024-11-06
+81,Bookshelf Model 81,Furniture,12650.56,439,2025-12-13
+82,Yoga Mat Model 82,Sports,14588.82,116,2024-05-17
+83,Bed Frame Model 83,Furniture,6674.5,422,2024-11-24
+84,Bed Frame Model 84,Furniture,6280.75,330,2024-04-01
+85,Sweater Model 85,Clothing,3210.29,421,2025-02-20
+86,Football Model 86,Sports,11404.42,444,2025-01-17
+87,Webcam Model 87,Electronics,11882.78,33,2024-11-14
+88,Bicycle Model 88,Sports,6080.61,399,2025-06-20
+89,Face Cream Model 89,Beauty,2647.37,448,2024-07-24
+90,Mechanical Keyboard Model 90,Electronics,544.41,25,2025-01-04
+91,Dumbbells Model 91,Sports,4145.96,421,2025-04-20
+92,Sunscreen Model 92,Beauty,9549.38,63,2025-11-28
+93,Mechanical Keyboard Model 93,Electronics,5618.38,304,2025-04-01
+94,Sweater Model 94,Clothing,8823.86,179,2024-12-18
+95,Dress Model 95,Clothing,11246.97,352,2024-04-02
+96,Office Chair Model 96,Furniture,5829.16,83,2025-08-08
+97,Sneakers Model 97,Clothing,9728.33,346,2024-07-30
+98,Bed Frame Model 98,Furniture,6172.13,10,2025-11-29
+99,Smartwatch Model 99,Electronics,13677.16,331,2024-06-26
+100,Face Cream Model 100,Beauty,3395.36,311,2024-11-08

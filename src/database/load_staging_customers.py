@@ -37,7 +37,13 @@ try:
                 NULLIF(TRIM(country), ''),
                 created_at
             FROM raw.customers
-            ON CONFLICT (customer_id) DO NOTHING;
+            ON CONFLICT (customer_id) DO UPDATE SET
+                first_name = EXCLUDED.first_name,
+                last_name = EXCLUDED.last_name,
+                email = EXCLUDED.email,
+                city = EXCLUDED.city,
+                country = EXCLUDED.country,
+                created_at = EXCLUDED.created_at;
         """)
 
         rows_inserted = cursor.rowcount

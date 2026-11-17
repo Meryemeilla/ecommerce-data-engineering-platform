@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-CSV_PATH = "data/raw/products.csv"
+DATA_DIR = os.getenv("DATA_DIR", "data/raw")
+CSV_PATH = os.path.join(DATA_DIR, "products.csv")
 
 
 def get_connection():

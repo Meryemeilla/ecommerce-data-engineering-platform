@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-CSV_PATH = "data/raw/customers.csv"
+DATA_DIR = os.getenv("DATA_DIR", "data/raw")
+CSV_PATH = os.path.join(DATA_DIR, "customers.csv")
 
 
 def get_connection():
@@ -136,7 +137,13 @@ def load_valid(df):
                 created_at
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s)
-            ON CONFLICT (customer_id) DO NOTHING;
+            ON CONFLICT (customer_id) DO UPDATE SET
+                first_name = EXCLUDED.first_name,
+                last_name = EXCLUDED.last_name,
+                email = EXCLUDED.email,
+                city = EXCLUDED.city,
+                country = EXCLUDED.country,
+                created_at = EXCLUDED.created_at;
             """,
             (
                 int(row["customer_id"]),

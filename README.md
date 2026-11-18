@@ -389,7 +389,7 @@ The main DAG was previously executed successfully in the original project enviro
 
 The DAG below illustrates the tasks and dependencies involved in the pipeline orchestration.
 
-![Airflow DAG](docs/images/Airflow_dag.PNG)
+![Airflow DAG](docs/images/Airflow_dag.png)
 
 ## Power BI Dashboard
 

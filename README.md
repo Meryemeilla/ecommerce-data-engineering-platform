@@ -1,8 +1,8 @@
 # E-commerce Data Engineering Platform
 
-An end-to-end Data Engineering project that builds an e-commerce data pipeline using Python, PostgreSQL, Apache Airflow, dbt, Docker and Power BI.
+An end-to-end Data Engineering project that builds an e-commerce data platform using Python, PostgreSQL, Apache Airflow, dbt, Apache Kafka, Spark Structured Streaming, Docker and Power BI.
 
-The platform ingests raw CSV data, validates and transforms records, builds analytical models, runs automated data quality tests and provides business insights through an interactive Power BI dashboard.
+The platform ingests raw CSV data, validates and transforms records, builds analytical models, processes real-time events, runs automated data quality tests and provides business insights through an interactive Power BI dashboard.
 
 ---
 
@@ -28,6 +28,8 @@ The platform ingests raw CSV data, validates and transforms records, builds anal
 - [Results](#results)
 - [Security](#security)
 - [Roadmap](#roadmap)
+- [Project Status](#project-status)
+- [Author](#author)
 
 ---
 
@@ -35,14 +37,19 @@ The platform ingests raw CSV data, validates and transforms records, builds anal
 
 The goal of this project is to develop a complete e-commerce data platform that transforms raw operational data into reliable analytical datasets.
 
-The pipeline follows a layered data architecture:
+The platform combines two processing approaches:
+
+- **Batch Processing:** Python, PostgreSQL, dbt and Apache Airflow.
+- **Real-Time Streaming:** Python, Apache Kafka and Spark Structured Streaming.
+
+The batch pipeline follows a layered data architecture:
 
 - **RAW:** Stores ingested source data.
 - **STAGING:** Contains cleaned and validated data.
-- **DBT:** Implements SQL transformations and analytical models.
+- **DBT Analytical Layer:** Implements SQL transformations and analytical models.
 - **POWER BI:** Provides interactive dashboards for business analysis.
 
-The project uses a larger synthetic dataset to simulate an e-commerce environment and demonstrate data processing and analytics at a representative scale.
+The project uses a synthetic e-commerce dataset to simulate an operational environment and demonstrate data processing, analytics and streaming capabilities.
 
 ## Business Objectives
 
@@ -55,6 +62,8 @@ The platform supports business analysis through questions such as:
 - How does order activity evolve over time?
 - How do sales and order volumes vary by customer location?
 - What is the distribution of orders by status?
+
+The streaming component additionally demonstrates how order events can be processed and validated as they arrive.
 
 ## Architecture
 
@@ -119,7 +128,7 @@ CSV Orders and Order Items
        (orders)
           |
           v
- Spark Structured Streaming
+Spark Structured Streaming
           |
      +----+----+
      |         |
@@ -134,14 +143,18 @@ PostgreSQL Streaming Schema
 
 | Technology | Purpose |
 |---|---|
-| Python 3.12 | Data ingestion and validation |
+| Python 3.12 | Data ingestion, validation and event production |
 | PostgreSQL 16 | Relational database and data warehouse |
 | SQL | Data querying and transformations |
-| Docker | Database containerization |
+| Docker | Service containerization |
 | Docker Compose | Local environment management |
-| Apache Airflow 3.3.2 | Pipeline orchestration |
+| Apache Airflow 3.3.2 | Batch pipeline orchestration |
 | dbt Core 1.12.6 | SQL transformations and data testing |
 | dbt-postgres 1.11.0 | PostgreSQL adapter for dbt |
+| Apache Kafka 4.1.1 | Real-time event streaming |
+| PySpark 4.0.1 | Structured Streaming and event processing |
+| kafka-python | Python Kafka producer |
+| PostgreSQL JDBC Driver 42.7.7 | Spark-to-PostgreSQL connectivity |
 | pytest | Automated testing |
 | GitHub Actions | Continuous Integration |
 | Power BI Desktop | Data visualization and reporting |
@@ -403,12 +416,12 @@ The DAG contains the following tasks:
 
 ### Scheduling Configuration
 
-- Schedule: Daily at 02:00
-- Timezone: `Africa/Casablanca`
-- `catchup=False`
-- Retries: 2
-- Retry delay: 2 minutes
-- Task execution timeout: 15 minutes
+- Schedule: Daily at 02:00.
+- Timezone: `Africa/Casablanca`.
+- `catchup=False`.
+- Retries: 2.
+- Retry delay: 2 minutes.
+- Task execution timeout: 15 minutes.
 
 The retry behavior was tested using a temporary DAG designed to fail deliberately. The test confirmed that two retries result in three total attempts.
 
@@ -532,6 +545,71 @@ The Power BI dashboard file is maintained separately as a `.pbix` file.
 
 ![E-commerce Sales Analytics Dashboard](docs/images/DashboardPowerBI.PNG)
 
+## Real-Time Data Engineering – Streaming Pipeline
+
+This project also includes a real-time data engineering pipeline designed to process e-commerce order events using Apache Kafka and Spark Structured Streaming.
+
+### Technologies
+
+- Python;
+- Apache Kafka 4.1.1;
+- PySpark 4.0.1;
+- PostgreSQL 16;
+- Docker;
+- kafka-python;
+- PostgreSQL JDBC Driver.
+
+### Key Features
+
+- Read order data from CSV files.
+- Calculate order totals using Python and Decimal.
+- Publish order events as JSON messages to Kafka.
+- Process events in real time with Spark Structured Streaming.
+- Validate incoming events and separate valid from rejected records.
+- Store valid and rejected events in PostgreSQL.
+- Track Kafka topic, partition and offset metadata.
+- Use Spark checkpoints to support stream recovery.
+- Log batch processing metrics and execution duration.
+- Use PostgreSQL UPSERT operations to prevent duplicate order records.
+
+### Streaming Validation Results
+
+| Metric | Result |
+|---|---:|
+| Processed order events | 5,000 |
+| Unique orders | 5,000 |
+| Total revenue | 433,475,332.07 |
+| First order ID | 2001 |
+| Last order ID | 7000 |
+
+An additional test event (`order_id = 9001`) was used to verify stream restart behavior. It is excluded from the results above.
+
+The duplicate event processing test also confirmed database-level idempotency: processing the same order IDs again did not create duplicate records in PostgreSQL.
+
+### Execution Evidence
+
+**Kafka Topic**
+
+![Kafka Topic](docs/images/Kafka_Topic.png)
+
+**Spark Structured Streaming**
+
+![Spark Streaming](docs/images/Spark_Streaming.png)
+
+**PostgreSQL Results**
+
+![PostgreSQL Streaming](docs/images/PostgreSQL_Streaming.png)
+
+**Rejected Events**
+
+![Rejected Events](docs/images/Rejected_Events.png)
+
+**Spark Restart Test**
+
+![Spark Restart](docs/images/Spark_Restart.png)
+
+For implementation details, validation rules and execution procedures, see the [Streaming Pipeline Documentation](docs/streaming.md).
+
 ## Project Structure
 
 ```text
@@ -559,7 +637,17 @@ ecommerce-data-engineering-platform/
 │
 ├── src/
 │   ├── ingestion/
-│   └── database/
+│   ├── database/
+│   └── streaming/
+│       ├── producer.py
+│       ├── consumer.py
+│       ├── spark_structured_streaming.py
+│       ├── send_test_event.py
+│       ├── send_invalid_test_event.py
+│       ├── spark_aggregation_test.py
+│       ├── spark_dataframe_test.py
+│       ├── spark_kafka_test.py
+│       └── spark_test.py
 │
 ├── tests/
 │   ├── integration/
@@ -572,7 +660,8 @@ ecommerce-data-engineering-platform/
 │       └── tests.yml
 │
 ├── docs/
-│   └── images/
+│   ├── images/
+│   └── streaming.md
 │
 ├── docker-compose.yml
 ├── requirements.txt
@@ -581,73 +670,7 @@ ecommerce-data-engineering-platform/
 └── README.md
 ```
 
-*The structure above highlights the main project components. Some generated data, local configuration and environment files are intentionally excluded from version control.*
-
-## Real-Time Data Engineering – Streaming Pipeline
-
-
-## Real-Time Data Engineering – Streaming Pipeline
-
-This project also includes a real-time data engineering pipeline designed to process e-commerce order events using Apache Kafka and Spark Structured Streaming.
-
-### Technologies
-
-- Python
-- Apache Kafka 4.1.1
-- PySpark 4.0.1
-- PostgreSQL 16
-- Docker
-- kafka-python
-- PostgreSQL JDBC Driver
-
-### Key Features
-
-- Read order data from CSV files.
-- Calculate order totals using Python and Decimal.
-- Publish order events as JSON messages to Kafka.
-- Process events in real time with Spark Structured Streaming.
-- Validate incoming events and separate valid from rejected records.
-- Store valid and rejected events in PostgreSQL.
-- Track Kafka topic, partition and offset metadata.
-- Use Spark checkpoints to support stream recovery.
-- Log batch processing metrics and execution duration.
-- Use PostgreSQL UPSERT operations to prevent duplicate order records.
-
-### Streaming Validation Results
-
-| Metric | Result |
-|---|---:|
-| Processed order events | 5,000 |
-| Unique orders | 5,000 |
-| Total revenue | 433,475,332.07 |
-| First order ID | 2001 |
-| Last order ID | 7000 |
-
-An additional test event (`order_id = 9001`) was used to verify stream restart behavior. It is excluded from the results above.
-
-### Execution Evidence
-
-**Kafka Topic**
-
-![Kafka Topic](docs/images/Kafka_Topic.png)
-
-**Spark Structured Streaming**
-
-![Spark Streaming](docs/images/Spark_Streaming.png)
-
-**PostgreSQL Results**
-
-![PostgreSQL Streaming](docs/images/PostgreSQL_Streaming.png)
-
-**Rejected Events**
-
-![Rejected Events](docs/images/Rejected_Events.png)
-
-**Spark Restart Test**
-
-![Spark Restart](docs/images/Spark_Restart.png)
-
-For implementation details and validation procedures, see the [Streaming Pipeline Documentation](docs/streaming.md).
+*The structure above highlights the main project components. Some generated data, local configuration, checkpoints, logs and virtual environments are intentionally excluded from version control.*
 
 ## Installation and Setup
 
@@ -655,13 +678,15 @@ For implementation details and validation procedures, see the [Streaming Pipelin
 
 Install the following tools:
 
-- Python 3.12
-- Docker Desktop and Docker Compose
-- Git
-- PostgreSQL client tools (optional)
-- dbt Core and dbt-postgres
-- Apache Airflow 3.3.2
-- Power BI Desktop (for dashboard analysis)
+- Python 3.12 for the batch pipeline;
+- Python 3.11 for the local Spark environment;
+- Docker Desktop and Docker Compose;
+- Git;
+- PostgreSQL client tools (optional);
+- dbt Core and dbt-postgres;
+- Apache Airflow 3.3.2;
+- Java 17 for the local Spark environment;
+- Power BI Desktop for dashboard analysis.
 
 ### 1. Clone the Repository
 
@@ -697,7 +722,7 @@ Copy-Item .env.example .env
 
 Update the database credentials in `.env`.
 
-### 5. Start PostgreSQL
+### 5. Start PostgreSQL and Kafka
 
 ```powershell
 docker compose up -d
@@ -721,7 +746,7 @@ dbt debug --project-dir dbt/ecommerce_dbt
 
 ## Running the Pipeline
 
-The commands below describe the main stages of the local workflow. Use the scripts and module names present in the repository.
+The commands below describe the main stages of the local batch workflow. Use the scripts and module names present in the repository.
 
 ### 1. Generate the Synthetic Dataset
 
@@ -776,7 +801,13 @@ dbt docs serve --project-dir dbt/ecommerce_dbt
 python -m pytest -v
 ```
 
-### 9. Open the Power BI Dashboard
+### 9. Run the Streaming Pipeline
+
+The streaming implementation uses a separate local Spark environment and Kafka configuration.
+
+Refer to [Streaming Pipeline Documentation](docs/streaming.md) for the producer, Spark Structured Streaming, checkpoint and PostgreSQL execution procedures.
+
+### 10. Open the Power BI Dashboard
 
 Connect Power BI Desktop to the PostgreSQL database and select the analytical views in the `dbt_dev` schema.
 
@@ -784,7 +815,7 @@ Connect Power BI Desktop to the PostgreSQL database and select the analytical vi
 
 The project uses environment variables for database configuration.
 
-Typical variables include:
+Typical development and test variables include:
 
 ```env
 DB_HOST=localhost
@@ -805,6 +836,8 @@ TEST_DB_PASSWORD=your_test_password
 The actual `.env` file must remain local and must never be committed.
 
 The BI environment uses the `ecommerce_bi` database and the `data/generated` directory.
+
+The streaming pipeline uses the same PostgreSQL connection configuration, together with Kafka and Spark-specific settings documented in `docs/streaming.md`.
 
 ## Results
 
@@ -844,11 +877,20 @@ The following values were obtained from the enlarged BI dataset:
 
 **Important:** Total Order Amount includes orders across all statuses. Delivered Revenue only includes delivered orders. These metrics should not be interpreted as equivalent to collected cash or accounting revenue.
 
+### Streaming Results
+
+The streaming pipeline processed 5,000 order events and stored 5,000 unique orders in PostgreSQL.
+
+The total streaming order amount was 433,475,332.07 for order IDs 2001–7000.
+
+The additional test event `order_id = 9001` is excluded from these figures.
+
 ### Testing Results
 
 - 11 Python tests passed in the original test suite.
 - 29 dbt data tests passed in the latest recorded dbt build.
-- The latest dbt build completed with 39 successful resources (10 models and 29 tests).
+- The latest recorded dbt build completed with 39 successful resources (10 models and 29 tests).
+- Streaming validation and duplicate-event processing tests were performed.
 - Power BI functional filter and KPI checks were successful.
 
 ## Security
@@ -858,23 +900,29 @@ The following values were obtained from the enlarged BI dataset:
 - Use `.env.example` to document required variables without real secrets.
 - Keep local database configuration separate from source code.
 - Use dedicated databases for development, testing and BI experimentation.
+- Keep virtual environments, Spark checkpoints and local logs out of version control.
 
 ## Roadmap
 
-- [x] Build Python CSV ingestion scripts
-- [x] Create PostgreSQL RAW and STAGING layers
-- [x] Implement data validation and rejected-record handling
-- [x] Develop SQL transformations
-- [x] Integrate dbt models and data tests
-- [x] Create a synthetic dataset for BI analysis
-- [x] Add automated Python tests
-- [x] Configure GitHub Actions for CI
-- [x] Build the Power BI dashboard
-- [x] Validate dashboard KPIs and interactive filters
-- [ ] Perform final end-to-end Airflow validation with the enlarged BI dataset
-- [ ] Improve monitoring and pipeline observability
-- [ ] Add incremental dbt models
-- [ ] Improve deployment configuration
+- [x] Build Python CSV ingestion scripts.
+- [x] Create PostgreSQL RAW and STAGING layers.
+- [x] Implement data validation and rejected-record handling.
+- [x] Develop SQL transformations.
+- [x] Integrate dbt models and data tests.
+- [x] Create a synthetic dataset for BI analysis.
+- [x] Add automated Python tests.
+- [x] Configure GitHub Actions for CI.
+- [x] Build the Power BI dashboard.
+- [x] Validate dashboard KPIs and interactive filters.
+- [x] Implement Kafka-based event production.
+- [x] Implement Spark Structured Streaming.
+- [x] Store valid and rejected events in PostgreSQL.
+- [x] Add streaming checkpoints and processing logs.
+- [x] Document the streaming pipeline.
+- [ ] Perform final end-to-end Airflow validation with the enlarged BI dataset.
+- [ ] Improve monitoring and pipeline observability.
+- [ ] Add incremental dbt models.
+- [ ] Improve deployment configuration.
 
 ---
 
@@ -882,7 +930,7 @@ The following values were obtained from the enlarged BI dataset:
 
 **Portfolio project – actively developed.**
 
-This project demonstrates practical Data Engineering skills, including Python ingestion, PostgreSQL data modeling, SQL transformations, dbt testing, Airflow orchestration, CI automation and Power BI reporting.
+This project demonstrates practical Data Engineering skills across batch and streaming architectures, including Python ingestion, PostgreSQL data modeling, SQL transformations, dbt testing, Airflow orchestration, Kafka event streaming, Spark Structured Streaming, CI automation and Power BI reporting.
 
 ## Author
 

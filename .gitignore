@@ -39,3 +39,6 @@ Thumbs.db
 **/target/
 **/dbt_packages/
 **/logs/
+# Spark local environment and checkpoints
+.venv-spark/
+data/checkpoints/

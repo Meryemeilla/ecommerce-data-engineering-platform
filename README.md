@@ -20,6 +20,7 @@ The platform ingests raw CSV data, validates and transforms records, builds anal
 - [Data Quality and Testing](#data-quality-and-testing)
 - [Apache Airflow Orchestration](#apache-airflow-orchestration)
 - [Power BI Dashboard](#power-bi-dashboard)
+- [Real-Time Data Engineering – Streaming Pipeline](#real-time-data-engineering--streaming-pipeline)
 - [Project Structure](#project-structure)
 - [Installation and Setup](#installation-and-setup)
 - [Running the Pipeline](#running-the-pipeline)
@@ -56,6 +57,8 @@ The platform supports business analysis through questions such as:
 - What is the distribution of orders by status?
 
 ## Architecture
+
+### Batch Processing Architecture
 
 ```text
                   SYNTHETIC CSV DATA
@@ -99,6 +102,32 @@ The platform supports business analysis through questions such as:
 
          APACHE AIRFLOW
        Orchestrates pipeline tasks
+```
+
+![Batch Data Engineering Architecture](docs/images/dbtGraph.PNG)
+
+### Real-Time Streaming Architecture
+
+```text
+CSV Orders and Order Items
+          |
+          v
+    Python Producer
+          |
+          v
+      Apache Kafka
+       (orders)
+          |
+          v
+ Spark Structured Streaming
+          |
+     +----+----+
+     |         |
+     v         v
+Valid Events  Rejected Events
+     |         |
+     v         v
+PostgreSQL Streaming Schema
 ```
 
 ## Technology Stack
@@ -553,6 +582,72 @@ ecommerce-data-engineering-platform/
 ```
 
 *The structure above highlights the main project components. Some generated data, local configuration and environment files are intentionally excluded from version control.*
+
+## Real-Time Data Engineering – Streaming Pipeline
+
+
+## Real-Time Data Engineering – Streaming Pipeline
+
+This project also includes a real-time data engineering pipeline designed to process e-commerce order events using Apache Kafka and Spark Structured Streaming.
+
+### Technologies
+
+- Python
+- Apache Kafka 4.1.1
+- PySpark 4.0.1
+- PostgreSQL 16
+- Docker
+- kafka-python
+- PostgreSQL JDBC Driver
+
+### Key Features
+
+- Read order data from CSV files.
+- Calculate order totals using Python and Decimal.
+- Publish order events as JSON messages to Kafka.
+- Process events in real time with Spark Structured Streaming.
+- Validate incoming events and separate valid from rejected records.
+- Store valid and rejected events in PostgreSQL.
+- Track Kafka topic, partition and offset metadata.
+- Use Spark checkpoints to support stream recovery.
+- Log batch processing metrics and execution duration.
+- Use PostgreSQL UPSERT operations to prevent duplicate order records.
+
+### Streaming Validation Results
+
+| Metric | Result |
+|---|---:|
+| Processed order events | 5,000 |
+| Unique orders | 5,000 |
+| Total revenue | 433,475,332.07 |
+| First order ID | 2001 |
+| Last order ID | 7000 |
+
+An additional test event (`order_id = 9001`) was used to verify stream restart behavior. It is excluded from the results above.
+
+### Execution Evidence
+
+**Kafka Topic**
+
+![Kafka Topic](docs/images/Kafka_Topic.png)
+
+**Spark Structured Streaming**
+
+![Spark Streaming](docs/images/Spark_Streaming.png)
+
+**PostgreSQL Results**
+
+![PostgreSQL Streaming](docs/images/PostgreSQL_Streaming.png)
+
+**Rejected Events**
+
+![Rejected Events](docs/images/Rejected_Events.png)
+
+**Spark Restart Test**
+
+![Spark Restart](docs/images/Spark_Restart.png)
+
+For implementation details and validation procedures, see the [Streaming Pipeline Documentation](docs/streaming.md).
 
 ## Installation and Setup
 
